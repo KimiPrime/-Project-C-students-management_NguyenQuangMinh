@@ -38,8 +38,11 @@ void showStudents(struct Student students[], int count) {
         return;
     }
     printf("\n======= STUDENT LIST =======\n");
+    printf("%-5s %-20s %-10s %-8s %-25s %-15s\n",
+           "ID", "Name", "DOB", "Gender", "Email", "Phone");
+
     for (int i = 0; i < count; i++) {
-        printf("ID: %d | Name: %s | DOB: %02d/%02d/%04d | Gender: %s | Email: %s | Phone: %s\n",
+        printf("%-5d %-20s %02d/%02d/%04d %-8s %-25s %-15s\n",
                students[i].StudentId,
                students[i].name,
                students[i].dateOfBirth.day,
