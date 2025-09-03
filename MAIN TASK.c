@@ -3,20 +3,30 @@
 #include <stdbool.h>
 #define MAX 100
 
-// Ngày sinh
-struct Date {
-    int day, month, year;
-};
-
 // Sinh viên
 struct Student {
     int StudentId;
     char name[30];
-    struct Date dateOfBirth;
     bool gender;
     char email[30];
     char phone[20];
 };
+
+// Check ID có phải là 1 số nếu không thì nhót
+int getValidId() {
+    int id;
+    char c;
+    while (1) {
+        printf("Student ID: ");
+        if (scanf("%d", &id) == 1) {  // nhập đúng số
+            while ((c = getchar()) != '\n' && c != EOF); // xóa bộ đệm
+            return id;
+        } else {
+            printf(">> Invalid input! ID must be a number.\n");
+            while ((c = getchar()) != '\n' && c != EOF); 
+        }
+    }
+}
 
 // ================= Menu =================
 void studentMenu() {
@@ -38,16 +48,13 @@ void showStudents(struct Student students[], int count) {
         return;
     }
     printf("\n======= STUDENT LIST =======\n");
-    printf("%-5s %-20s %-10s %-8s %-25s %-15s\n",
-           "ID", "Name", "DOB", "Gender", "Email", "Phone");
+    printf("%-5s %-20s %-8s %-25s %-15s\n",
+           "ID", "Name", "Gender", "Email", "Phone");
 
     for (int i = 0; i < count; i++) {
-        printf("%-5d %-20s %02d/%02d/%04d %-8s %-25s %-15s\n",
+        printf("%-5d %-20s %-8s %-25s %-15s\n",
                students[i].StudentId,
                students[i].name,
-               students[i].dateOfBirth.day,
-               students[i].dateOfBirth.month,
-               students[i].dateOfBirth.year,
                students[i].gender ? "MALE" : "FEMALE",
                students[i].email,
                students[i].phone);
@@ -65,37 +72,33 @@ void addStudents(struct Student students[], int *count) {
 
     printf("\n--- Enter student information ---\n");
     // 1. ID
-    printf("Student ID: ");
-    scanf("%d", &stu.StudentId);
-    getchar();
+    stu.StudentId = getValidId();   // dùng hàm nhập ID hợp lệ
+
     for (int i = 0; i < *count; i++) {
         if (students[i].StudentId == stu.StudentId) {
-            printf(" Student ID already exists.\n");
+            printf("!! Student ID already exists.\n");
             return;
         }
     }
+
     // 2. Tên
     printf("Full name: ");
     fgets(stu.name, sizeof(stu.name), stdin);
     stu.name[strcspn(stu.name, "\n")] = 0;
 
-    // 3. Ngày sinh
-    printf("Date of Birth (dd mm yyyy): ");
-    scanf("%d %d %d", &stu.dateOfBirth.day, &stu.dateOfBirth.month, &stu.dateOfBirth.year);
-
-    // 4. Giới tính
+    // 3. Giới tính
     int gen;
     printf("Gender (1=Male, 0=Female): ");
     scanf("%d", &gen);
     stu.gender = (gen == 1);
     getchar();
 
-    // 5. Email
+    // 4. Email
     printf("Email: ");
     fgets(stu.email, sizeof(stu.email), stdin);
     stu.email[strcspn(stu.email, "\n")] = 0;
 
-    // 6. Điện thoại
+    // 5. Điện thoại
     printf("Phone number: ");
     fgets(stu.phone, sizeof(stu.phone), stdin);
     stu.phone[strcspn(stu.phone, "\n")] = 0;
@@ -115,8 +118,7 @@ void editStudent(struct Student students[], int count) {
 
     int id;
     printf("Enter Student ID to edit: ");
-    scanf("%d", &id);
-    getchar();
+    id = getValidId();  // dùng lại hàm nhập ID hợp lệ
 
     for (int i = 0; i < count; i++) {
         if (students[i].StudentId == id) {
@@ -125,11 +127,6 @@ void editStudent(struct Student students[], int count) {
             printf("New name: ");
             fgets(students[i].name, sizeof(students[i].name), stdin);
             students[i].name[strcspn(students[i].name, "\n")] = 0;
-
-            printf("New DOB (dd mm yyyy): ");
-            scanf("%d %d %d", &students[i].dateOfBirth.day,
-                              &students[i].dateOfBirth.month,
-                              &students[i].dateOfBirth.year);
 
             int gen;
             printf("New Gender (1=Male, 0=Female): ");
@@ -161,7 +158,7 @@ void removeStudent(struct Student students[], int *count) {
 
     int id;
     printf("Enter Student ID to remove: ");
-    scanf("%d", &id);
+    id = getValidId();   // cũng dùng hàm nhập ID hợp lệ
 
     for (int i = 0; i < *count; i++) {
         if (students[i].StudentId == id) {
@@ -177,7 +174,6 @@ void removeStudent(struct Student students[], int *count) {
     printf("!! Student ID not found !!\n");
 }
 
-// ================= Main =================
 int main() {
     int choice;
     struct Student students[MAX];
@@ -185,8 +181,7 @@ int main() {
 
     do {
         studentMenu();
-        scanf("%d", &choice);
-        getchar(); // xóa \n
+        choice = getValidId();  // cũng tận dụng cho menu
 
         switch (choice) {
             case 1:
