@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #define MAX 100
 
-// ================== CẤU TRÚC ==================
 struct Date {
     int month, day, year;
 };
@@ -35,7 +34,8 @@ struct Teacher {
     struct Classroom classrooms;
 };
 // ================== HÀM NHẬP ==================
-// Nhập ID hợp lệ
+// kiểm tra các phần nhập có đúng với yêu cầu
+// id
 int getValidId() {
     int id;
     char c;
@@ -50,8 +50,7 @@ int getValidId() {
         }
     }
 }
-
-// Nhập lựa chọn menu hợp lệ
+// lựa chọn
 int getValidChoice() {
     int choice;
     char c;
@@ -66,8 +65,7 @@ int getValidChoice() {
         }
     }
 }
-
-// Nhập giới tính hợp lệ
+// giới tính
 bool getValidGender() {
     int gen;
     char c;
@@ -82,8 +80,7 @@ bool getValidGender() {
         }
     }
 }
-
-// Nhập số điện thoại hợp lệ
+// số đt
 void getValidPhone(char *phone, int size) {
     while (1) {
         printf("Phone number: ");
@@ -101,8 +98,7 @@ void getValidPhone(char *phone, int size) {
         printf(">> Invalid phone number! Only digits allowed.\n");
     }
 }
-
-// Nhập ngày sinh hợp lệ
+// ngày tháng
 struct Date getValidDate() {
     struct Date d;
     while (1) {
@@ -125,6 +121,16 @@ struct Date getValidDate() {
     }
 }
 
+// ================== CHỌN ROLE ==================
+void getRoleMenu() {
+    printf("\n===== CHOOSE YOUR ROLE =====\n");
+    printf("[1] Admin\n");
+    printf("[2] Student\n");
+    printf("[3] Teacher\n");
+    printf("[0] EXIT\n");
+    printf("============================\n");
+}
+
 // ================== MENU ==================
 void studentMenu() {
     printf("\n**** STUDENT MENU ****\n");
@@ -133,7 +139,9 @@ void studentMenu() {
     printf("[2] ADD A NEW STUDENT\n");
     printf("[3] EDIT STUDENT INFORMATION\n");
     printf("[4] REMOVE A STUDENT\n");
-    printf("[5] EXIT\n");
+    printf("[5] SEARCHING A STUDENT\n");
+    printf("[6] SORT OF STUDENT NAME LIST (A-Z)\n");
+    printf("[7] EXIT\n");
     printf("============================\n");
 }
 
@@ -163,7 +171,7 @@ void showStudents(struct Student students[], int count) {
     printf("======================================================================================================\n");
 }
 
-// Sắp xếp theo ID
+// ================== SẮP XẾP ==================
 void sortStudents(struct Student students[], int count) {
     for (int i = 0; i < count - 1; i++) {
         for (int j = i + 1; j < count; j++) {
@@ -271,50 +279,6 @@ void removeStudent(struct Student students[], int *count) {
     printf("!! Student ID not found !!\n");
 }
 
-// ================== SUBMENU ==================
-void showStudentScreen(struct Student students[], int count) {
-    int choice;
-    do {
-        printf("\n===== SHOW STUDENT LIST =====\n");
-        showStudents(students, count);
-        printf("\n[0] Back to main menu\n");
-        choice = getValidChoice();
-    } while (choice != 0);
-}
-
-void addStudentScreen(struct Student students[], int *count) {
-    int choice;
-    do {
-        printf("\n===== ADD STUDENT =====\n");
-        addStudents(students, count);
-        printf("\n[0] Back to main menu\n");
-        printf("[1] Add another student\n");
-        choice = getValidChoice();
-    } while (choice != 0);
-}
-
-void editStudentScreen(struct Student students[], int count) {
-    int choice;
-    do {
-        printf("\n===== EDIT STUDENT =====\n");
-        editStudent(students, count);
-        printf("\n[0] Back to main menu\n");
-        printf("[1] Edit another student\n");
-        choice = getValidChoice();
-    } while (choice != 0);
-}
-
-void removeStudentScreen(struct Student students[], int *count) {
-    int choice;
-    do {
-        printf("\n===== REMOVE STUDENT =====\n");
-        removeStudent(students, count);
-        printf("\n[0] Back to main menu\n");
-        printf("[1] Remove another student\n");
-        choice = getValidChoice();
-    } while (choice != 0);
-}
-
 // ================== MAIN ==================
 int main() {
     int choice;
@@ -322,29 +286,40 @@ int main() {
     int count = 0;
 
     do {
-        studentMenu();
+        getRoleMenu();
         choice = getValidChoice();
 
-        switch (choice) {
-            case 1:
-                showStudentScreen(students, count);
-                break;
-            case 2:
-                addStudentScreen(students, &count);
-                break;
-            case 3:
-                editStudentScreen(students, count);
-                break;
-            case 4:
-                removeStudentScreen(students, &count);
-                break;
-            case 5:
-                printf("Exiting program... BYE BYE!\n");
-                break;
-            default:
-                printf("Invalid choice! Please try again.\n");
+        if (choice == 1) {
+            printf(">> Admin menu .\n");
+        } else if (choice == 2) {
+            // STUDENT MENU
+            int studentChoice;
+            do {
+                studentMenu();
+                studentChoice = getValidChoice();
+                switch (studentChoice) {
+                    case 1: showStudents(students, count);
+                        break;
+                    case 2: addStudents(students, &count);
+                        break;
+                    case 3: editStudent(students, count);
+                        break;
+                    case 4: removeStudent(students, &count);
+                        break;
+                    case 5: printf("Exiting student menu...\n");
+                        break;
+                    default: printf("Invalid choice! Try again.\n");
+                }
+            } while (studentChoice != 5);
+        } else if (choice == 3) {
+            printf(">> Teacher menu .\n");
+        } else if (choice == 0) {
+            printf("Exiting program... BYE BYE!\n");
+        } else {
+            printf(">> Invalid role! Try again.\n");
         }
-    } while (choice != 5);
+
+    } while (choice != 0);
 
     return 0;
 }
