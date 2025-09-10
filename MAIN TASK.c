@@ -289,7 +289,7 @@ void removeStudent(struct Student students[], int *count) {
                 if (confirm == 'y' || confirm == 'Y') {
                     for (int j = i; j < *count - 1; j++) {
                         students[j] = students[j + 1];
-                        students[j].StudentId = j + 1;
+
                     }
                     (*count)--;
                     printf(">> Student removed successfully!\n");
@@ -307,8 +307,19 @@ void removeStudent(struct Student students[], int *count) {
     }
     printf("!! Student ID not found !!\n");
 }
+// ================== TIM KIEM ==================
+// void searchNames(struct Student students[], int *count) {
+//     if (*count == 0) {
+//         printf("-- NO STUDENT TO REMOVE --\n");
+//         return;
+//     }
+//     int name;
+//     printf("Enter Student Name to remove: ");
+//     scanf("%d", &name);
+//     getchar();
+// }
 
-// ================== SẮP XẾP ==================
+// ================== SẮP XẾP (theo ten va id) ==================
 int compareNames(const char *a, const char *b) {
     char nameA[30], nameB[30];
     strcpy(nameA, a);
@@ -331,10 +342,12 @@ void sortStudents(struct Student students[], int count) {
         printf("\n===== SORT MENU =====\n");
         printf("[1] Sort by Name (Ascending A->Z)\n");
         printf("[2] Sort by Name (Descending Z->A)\n");
+        printf("[3] Sort by ID (Ascending)\n");
+        printf("[4] Sort by ID (Descending)\n");
         printf("[0] Back to Student Menu\n");
         printf("======================\n");
         choice = getValidChoice();
-
+        // bbs
         if (choice == 1) {
             for (int i = 0; i < count - 1; i++) {
                 for (int j = i + 1; j < count; j++) {
@@ -345,7 +358,7 @@ void sortStudents(struct Student students[], int count) {
                     }
                 }
             }
-            printf("\n>> Student list sorted in Ascending order!\n");
+            printf("\n>> Student list sorted in Ascending Name order!\n");
             showStudents(students, count);
         } else if (choice == 2) {
             for (int i = 0; i < count - 1; i++) {
@@ -357,7 +370,31 @@ void sortStudents(struct Student students[], int count) {
                     }
                 }
             }
-            printf("\n>> Student list sorted in Descending order!\n");
+            printf("\n>> Student list sorted in Descending Name order!\n");
+            showStudents(students, count);
+        }else if (choice ==3) {
+            for (int i = 0; i < count - 1; i++) {
+                for (int j = i + 1; j < count; j++) {
+                    if (students[i].StudentId > students[j].StudentId) {
+                        struct Student temp = students[i];
+                        students[i] = students[j];
+                        students[j] = temp;
+                    }
+                }
+        }
+            printf("\n>> Student list sorted in Ascending ID order!\n");
+            showStudents(students, count);
+        }else if (choice ==4) {
+            for (int i = 0; i < count - 1; i++) {
+                for (int j = i + 1; j < count; j++) {
+                    if (students[i].StudentId < students[j].StudentId) {
+                        struct Student temp = students[i];
+                        students[i] = students[j];
+                        students[j] = temp;
+                    }
+                }
+            }
+            printf("\n>> Student list sorted in Descending ID order!\n");
             showStudents(students, count);
         } else if (choice == 0) {
             printf("Back to Student Menu...\n");
