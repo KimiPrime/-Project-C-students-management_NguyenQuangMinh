@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <stdlib.h>
 #define MAX 100
 
 struct Date {
@@ -16,14 +15,9 @@ struct Student {
     char email[30];
     char phone[20];
 };
-// fix cứng
-//struct Student students[MAX] = {
-    //{1, "Nguyen Van A", {01, 01, 2000}, true,  "vana@gmail.com", "0123456789"},
-  //  {2, "Tran Thi B",   {15, 05, 2001}, false, "thib@gmail.com", "0987654321"}
-//};
-//int count = 2;
 
-// ================== HÀM NHẬP ==================
+// ================== HÀM HỖ TRỢ ==================
+
 // lựa chọn
 int getValidChoice() {
     int choice;
@@ -60,9 +54,10 @@ bool getValidGender() {
 void getValidPhone(char *phone, int size) {
     while (1) {
         printf("Phone number: ");
-        fgets(phone, size, stdin);
+        if (!fgets(phone, size, stdin)) phone[0] = '\0';
         phone[strcspn(phone, "\n")] = 0;
 
+        int len = strlen(phone);
         int valid = 1;
         for (int i = 0; phone[i] != '\0'; i++) {
             if (!isdigit((unsigned char)phone[i])) {
@@ -70,8 +65,8 @@ void getValidPhone(char *phone, int size) {
                 break;
             }
         }
-        if (valid && strlen(phone) > 0) return;
-        printf(">> Invalid phone number! Only digits allowed.\n");
+        if (valid && len >= 9 && len <= 11) return;
+        printf(">> Invalid phone number! Only digits allowed (9 to 11 chars).\n");
     }
 }
 
@@ -98,28 +93,28 @@ struct Date getValidDate() {
     }
 }
 
-//  EMAIL
+// EMAIL
 int isValidEmail(const char *email) {
     int atPos = -1, dotPos = -1;
     int len = strlen(email);
 
     for (int i = 0; i < len; i++) {
         if (isspace((unsigned char)email[i]))
-            return 0; // không cho phép khoảng trắng
+            return 0;
         if (email[i] == '@' && atPos == -1) atPos = i;
         if (email[i] == '.') dotPos = i;
     }
 
     if (atPos == -1 || dotPos == -1)
-        return 0;                 // phải có @ và .
+        return 0;
     if (dotPos < atPos)
-        return 0;                // . phải sau @
+        return 0;
     if (atPos == 0 || atPos == len - 1)
-        return 0;               // @ không ở đầu/cuối
+        return 0;
     if (dotPos == len - 1)
-        return 0;               // . không ở cuối
+        return 0;
     if (dotPos - atPos < 2)
-        return 0;               // phải có ký tự giữa @ và .
+        return 0;
 
     return 1;
 }
@@ -127,15 +122,43 @@ int isValidEmail(const char *email) {
 void getValidEmail(char *email, int size) {
     while (1) {
         printf("Email: ");
-        fgets(email, size, stdin);
+        if (!fgets(email, size, stdin)) email[0] = '\0';
         email[strcspn(email, "\n")] = 0;
 
-        if (isValidEmail(email)) {
-            return;
-        } else {
-            printf(">> Invalid email format! Example: user@gmail.com\n");
-        }
+        if (isValidEmail(email)) return;
+        else printf(">> Invalid email format! Example: username@gmail.com\n");
     }
+}
+
+// check chuỗi rỗng
+int isEmptyOrSpaces(const char *str) {
+    if (strlen(str) == 0) return 1;
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (!isspace((unsigned char)str[i]))
+            return 0;
+    }
+    return 1;
+}
+
+// check trùng email phone
+int isDuplicateExcept(struct Student students[], int count, const char *email, const char *phone, int excludeIndex) {
+    for (int i = 0; i < count; i++) {
+        if (i == excludeIndex) continue;
+        if (strlen(email) > 0 && strcmp(students[i].email, email) == 0)
+            return 2; // trùng email
+        if (strlen(phone) > 0 && strcmp(students[i].phone, phone) == 0)
+            return 3; // trùng phone
+    }
+    return 0;
+}
+
+//  id + 1
+int getNextId(struct Student students[], int count) {
+    int maxId = 0;
+    for (int i = 0; i < count; i++) {
+        if (students[i].StudentId > maxId) maxId = students[i].StudentId;
+    }
+    return maxId + 1;
 }
 
 // ================== CHỌN ROLE ==================
@@ -156,12 +179,12 @@ void studentMenu() {
     printf("[2] ADD A NEW STUDENT\n");
     printf("[3] EDIT STUDENT INFORMATION\n");
     printf("[4] REMOVE A STUDENT\n");
-    printf("[5] SEARCHING A STUDENT \n");
-    printf("[6] SORT OF STUDENT NAME LIST \n");
+    printf("[5] SEARCHING A STUDENT\n");
+    printf("[6] SORT STUDENT LIST\n");
     printf("[7] EXIT\n");
     printf("============================\n");
 }
-
+// ================== CHỨC NĂNG =================
 // ================== HIỂN THỊ ==================
 void showStudents(struct Student students[], int count) {
     if (count == 0) {
@@ -198,17 +221,34 @@ void addStudents(struct Student students[], int *count) {
     printf("\n--- Enter student information ---\n");
 
     // ID tự sinh
-    stu.StudentId = *count + 1;
+    stu.StudentId = getNextId(students, *count);
     printf(" Student ID: %d\n", stu.StudentId);
 
-    printf("Full name: ");
-    fgets(stu.name, sizeof(stu.name), stdin);
-    stu.name[strcspn(stu.name, "\n")] = 0;
+    do {
+        printf("Full name: ");
+        if (!fgets(stu.name, sizeof(stu.name), stdin)) stu.name[0] = '\0';
+        stu.name[strcspn(stu.name, "\n")] = 0;
+        if (isEmptyOrSpaces(stu.name)) {
+            printf(">> Name cannot be empty!\n");
+        } else break;
+    } while (1);
 
     stu.dayOfBirth = getValidDate();
     stu.gender = getValidGender();
-    getValidEmail(stu.email, sizeof(stu.email));
-    getValidPhone(stu.phone, sizeof(stu.phone));
+
+    do {
+        getValidEmail(stu.email, sizeof(stu.email));
+        if (isDuplicateExcept(students, *count, stu.email, "", -1) == 2)
+            printf(">> Email already exists!\n");
+        else break;
+    } while (1);
+
+    do {
+        getValidPhone(stu.phone, sizeof(stu.phone));
+        if (isDuplicateExcept(students, *count, "", stu.phone, -1) == 3)
+            printf(">> Phone already exists!\n");
+        else break;
+    } while (1);
 
     students[*count] = stu;
     (*count)++;
@@ -223,30 +263,43 @@ void editStudent(struct Student students[], int count) {
     }
     int id;
     printf("Enter Student ID to edit: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1) {
+        char c;
+        while ((c = getchar()) != '\n' && c != EOF);
+        printf(">> Invalid input!\n");
+        return;
+    }
     getchar();
 
     for (int i = 0; i < count; i++) {
         if (students[i].StudentId == id) {
-            printf("Editing info for student");
-            printf("Student ID: %d\n", students[i].StudentId);
-            printf("NAME: %s\n", students[i].name);
-            printf("DAY OF BIRTH: %02d|%02d|%04d\n", students[i].dayOfBirth.day,students[i].dayOfBirth.month,students[i].dayOfBirth.year);
-            printf("GENDER: %s\n", students[i].gender ? "MALE" : "FEMALE");
-            printf("EMAIL: %s\n", students[i].email);
-            printf("PHONE: %s\n", students[i].phone);
+            printf("Editing info for student ID %d\n", students[i].StudentId);
 
-            printf("New name: ");
-            fgets(students[i].name, sizeof(students[i].name), stdin);
-            students[i].name[strcspn(students[i].name, "\n")] = 0;
+            do {
+                printf("New name: ");
+                if (!fgets(students[i].name, sizeof(students[i].name), stdin)) students[i].name[0] = '\0';
+                students[i].name[strcspn(students[i].name, "\n")] = 0;
+                if (isEmptyOrSpaces(students[i].name))
+                    printf(">> Name cannot be empty!\n");
+                else break;
+            } while (1);
 
             students[i].dayOfBirth = getValidDate();
-
             students[i].gender = getValidGender();
 
-            getValidEmail(students[i].email, sizeof(students[i].email));
+            do {
+                getValidEmail(students[i].email, sizeof(students[i].email));
+                if (isDuplicateExcept(students, count, students[i].email, "", i) == 2)
+                    printf(">> Email already exists!\n");
+                else break;
+            } while (1);
 
-            getValidPhone(students[i].phone, sizeof(students[i].phone));
+            do {
+                getValidPhone(students[i].phone, sizeof(students[i].phone));
+                if (isDuplicateExcept(students, count, "", students[i].phone, i) == 3)
+                    printf(">> Phone already exists!\n");
+                else break;
+            } while (1);
 
             printf(">> Student updated successfully!\n");
             return;
@@ -264,13 +317,121 @@ void removeStudent(struct Student students[], int *count) {
 
     int id;
     printf("Enter Student ID to remove: ");
-    scanf("%d", &id);
+    if (scanf("%d", &id) != 1) {
+        char c;
+        while ((c = getchar()) != '\n' && c != EOF);
+        printf(">> Invalid input!\n");
+        return;
+    }
     getchar();
 
     for (int i = 0; i < *count; i++) {
         if (students[i].StudentId == id) {
-            printf("\n>> Found student:\n");
-            printf("ID: %d | Name: %s | DOB: %02d/%02d/%04d | Gender: %s | Email: %s | Phone: %s\n",
+            char confirm;
+            printf("Found student: %s\n", students[i].name);
+            do {
+                printf("Are you sure you want to remove this student? (y/n): ");
+                if (scanf(" %c", &confirm) != 1) {
+                    char c;
+                    while ((c = getchar()) != '\n' && c != EOF);
+                    printf(">> Invalid input!\n");
+                    return;
+                }
+                getchar();
+                if (confirm == 'y' || confirm == 'Y') {
+                    for (int j = i; j < *count - 1; j++)
+                        students[j] = students[j + 1];
+                    (*count)--;
+                    printf(">> Student removed successfully!\n");
+                    return;
+                } else if (confirm == 'n' || confirm == 'N') {
+                    printf(">> Cancelled remove student!\n");
+                    return;
+                }
+            } while (1);
+        }
+    }
+    printf("!! Student ID not found !!\n");
+}
+
+// ================== TÌM KIẾM ==================
+void searchStudentByYear(struct Student students[], int count) {
+    if (count == 0) {
+        printf("-- NO STUDENT TO SEARCH --\n");
+        return;
+    }
+    int year;
+    printf("Enter Student year: ");
+    if (scanf("%d", &year) != 1) {
+        char c;
+        while ((c = getchar()) != '\n' && c != EOF);
+        printf(">> Invalid input!\n");
+        return;
+    }
+    getchar();
+    int found = 0;
+    for (int i = 0; i < count; i++) {
+            if (students[i].dayOfBirth.year == year) {
+                if (!found) {
+                    printf("======================================================================================================\n");
+                    printf("|%-5s| %-20s| %-12s| %-8s| %-25s| %-15s|\n",
+                           "ID", "Name", "DOB", "Gender", "Email", "Phone");
+                    printf("------------------------------------------------------------------------------------------------------\n");
+                }
+                printf("|%-5d| %-20s| %02d/%02d/%04d  | %-8s| %-25s| %-15s|\n",
+                       students[i].StudentId,
+                       students[i].name,
+                       students[i].dayOfBirth.day,
+                       students[i].dayOfBirth.month,
+                       students[i].dayOfBirth.year,
+                       students[i].gender ? "MALE" : "FEMALE",
+                       students[i].email,
+                       students[i].phone);
+                found = 1;
+            }
+    }
+    if (found) {
+        printf("======================================================================================================\n");
+    } else {
+        printf(">> No student found with year of birth: %d\n", year);
+    }
+}
+void searchStudentByName(struct Student students[], int count) {
+    if (count == 0) {
+        printf("-- NO STUDENT TO SEARCH --\n");
+        return;
+    }
+    char keyword[30];
+    printf("Enter student name to search: ");
+    if (!fgets(keyword, sizeof(keyword), stdin)) keyword[0] = '\0';
+    keyword[strcspn(keyword, "\n")] = 0;
+
+    if (isEmptyOrSpaces(keyword)) {
+        printf(">> Search keyword cannot be empty.\n");
+        return;
+    }
+    char lowerKeyword[30];
+    strncpy(lowerKeyword, keyword, sizeof(lowerKeyword));
+    lowerKeyword[sizeof(lowerKeyword)-1] = '\0';
+    for (int i = 0; lowerKeyword[i]; i++)
+        lowerKeyword[i] = tolower((unsigned char)lowerKeyword[i]);
+
+    int found = 0;
+    for (int i = 0; i < count; i++) {
+        char lowerName[30];
+        strncpy(lowerName, students[i].name, sizeof(lowerName));
+        lowerName[sizeof(lowerName)-1] = '\0';
+        for (int j = 0; lowerName[j]; j++)
+            lowerName[j] = tolower((unsigned char)lowerName[j]);
+
+        if (strstr(lowerName, lowerKeyword) != NULL) {
+            if (!found) {
+                printf("======================================================================================================\n");
+                printf("|%-5s| %-20s| %-12s| %-8s| %-25s| %-15s|\n",
+                       "ID", "Name", "DOB", "Gender", "Email", "Phone");
+                printf("------------------------------------------------------------------------------------------------------\n");
+            }
+            printf("|%-5d| %-20s| %02d/%02d/%04d  | %-8s| %-25s| %-15s|\n",
                    students[i].StudentId,
                    students[i].name,
                    students[i].dayOfBirth.day,
@@ -279,55 +440,24 @@ void removeStudent(struct Student students[], int *count) {
                    students[i].gender ? "MALE" : "FEMALE",
                    students[i].email,
                    students[i].phone);
-
-            char confirm;
-            do {
-                printf("Are you sure you want to remove this student? (y/n): ");
-                scanf(" %c", &confirm);
-                getchar();
-
-                if (confirm == 'y' || confirm == 'Y') {
-                    for (int j = i; j < *count - 1; j++) {
-                        students[j] = students[j + 1];
-
-                    }
-                    (*count)--;
-                    printf(">> Student removed successfully!\n");
-                    return;
-                } else if (confirm == 'n' || confirm == 'N') {
-                    printf(">> Cancelled remove student!\n");
-                    return;
-                } else {
-                    printf("!! Just Y/N or y/n !!\n");
-                }
-            } while (confirm != 'y' && confirm != 'Y' && confirm != 'n' && confirm != 'N');
-
-            return;
+            found = 1;
         }
     }
-    printf("!! Student ID not found !!\n");
-}
-// ================== TIM KIEM ==================
-// void searchNames(struct Student students[], int *count) {
-//     if (*count == 0) {
-//         printf("-- NO STUDENT TO REMOVE --\n");
-//         return;
-//     }
-//     int name;
-//     printf("Enter Student Name to remove: ");
-//     scanf("%d", &name);
-//     getchar();
-// }
 
-// ================== SẮP XẾP (theo ten va id) ==================
+    if (found) {
+        printf("======================================================================================================\n");
+    } else {
+        printf(">> No student found with name: '%s'\n", keyword);
+    }
+}
+
+// ================== SẮP XẾP ==================
 int compareNames(const char *a, const char *b) {
     char nameA[30], nameB[30];
-    strcpy(nameA, a);
-    strcpy(nameB, b);
-    // chuyển thành chữ thường
+    strncpy(nameA, a, sizeof(nameA)); nameA[sizeof(nameA)-1] = '\0';
+    strncpy(nameB, b, sizeof(nameB)); nameB[sizeof(nameB)-1] = '\0';
     for (int i = 0; nameA[i]; i++) nameA[i] = tolower((unsigned char)nameA[i]);
     for (int i = 0; nameB[i]; i++) nameB[i] = tolower((unsigned char)nameB[i]);
-
     return strcmp(nameA, nameB);
 }
 
@@ -336,73 +466,47 @@ void sortStudents(struct Student students[], int count) {
         printf("-- NO STUDENT TO SORT --\n");
         return;
     }
-
     int choice;
     do {
         printf("\n===== SORT MENU =====\n");
-        printf("[1] Sort by Name (Ascending A->Z)\n");
-        printf("[2] Sort by Name (Descending Z->A)\n");
+        printf("[1] Sort by Name (A->Z)\n");
+        printf("[2] Sort by Name (Z->A)\n");
         printf("[3] Sort by ID (Ascending)\n");
         printf("[4] Sort by ID (Descending)\n");
-        printf("[0] Back to Student Menu\n");
-        printf("======================\n");
+        printf("[0] Back\n");
         choice = getValidChoice();
-        // bbs
         if (choice == 1) {
-            for (int i = 0; i < count - 1; i++) {
-                for (int j = i + 1; j < count; j++) {
-                    if (compareNames(students[i].name, students[j].name) > 0) {
-                        struct Student temp = students[i];
-                        students[i] = students[j];
-                        students[j] = temp;
+            for (int i=0;i<count-1;i++)
+                for (int j=i+1;j<count;j++)
+                    if (compareNames(students[i].name,students[j].name)>0) {
+                        struct Student tmp=students[i]; students[i]=students[j]; students[j]=tmp;
                     }
-                }
-            }
-            printf("\n>> Student list sorted in Ascending Name order!\n");
-            showStudents(students, count);
+            printf(">> Sorted by Name ASC!\n");
         } else if (choice == 2) {
-            for (int i = 0; i < count - 1; i++) {
-                for (int j = i + 1; j < count; j++) {
-                    if (compareNames(students[i].name, students[j].name) < 0) {
-                        struct Student temp = students[i];
-                        students[i] = students[j];
-                        students[j] = temp;
+            for (int i=0;i<count-1;i++)
+                for (int j=i+1;j<count;j++)
+                    if (compareNames(students[i].name,students[j].name)<0) {
+                        struct Student tmp=students[i]; students[i]=students[j]; students[j]=tmp;
                     }
-                }
-            }
-            printf("\n>> Student list sorted in Descending Name order!\n");
-            showStudents(students, count);
-        }else if (choice ==3) {
-            for (int i = 0; i < count - 1; i++) {
-                for (int j = i + 1; j < count; j++) {
+            printf(">> Sorted by Name DESC!\n");
+        } else if (choice == 3) {
+            for (int i=0;i<count-1;i++)
+                for (int j=i+1;j<count;j++)
                     if (students[i].StudentId > students[j].StudentId) {
-                        struct Student temp = students[i];
-                        students[i] = students[j];
-                        students[j] = temp;
+                        struct Student tmp=students[i]; students[i]=students[j]; students[j]=tmp;
                     }
-                }
-        }
-            printf("\n>> Student list sorted in Ascending ID order!\n");
-            showStudents(students, count);
-        }else if (choice ==4) {
-            for (int i = 0; i < count - 1; i++) {
-                for (int j = i + 1; j < count; j++) {
+            printf(">> Sorted by ID ASC!\n");
+        } else if (choice == 4) {
+            for (int i=0;i<count-1;i++)
+                for (int j=i+1;j<count;j++)
                     if (students[i].StudentId < students[j].StudentId) {
-                        struct Student temp = students[i];
-                        students[i] = students[j];
-                        students[j] = temp;
+                        struct Student tmp=students[i]; students[i]=students[j]; students[j]=tmp;
                     }
-                }
-            }
-            printf("\n>> Student list sorted in Descending ID order!\n");
-            showStudents(students, count);
-        } else if (choice == 0) {
-            printf("Back to Student Menu...\n");
-        } else {
-            printf(">> Invalid choice! Try again.\n");
+            printf(">> Sorted by ID DESC!\n");
         }
     } while (choice != 0);
 }
+
 // ================== MAIN ==================
 int main() {
     int choice;
@@ -412,7 +516,7 @@ int main() {
         getRoleMenu();
         choice = getValidChoice();
         if (choice == 1) {
-             int studentChoice;
+            int studentChoice;
             do {
                 studentMenu();
                 studentChoice = getValidChoice();
@@ -449,9 +553,23 @@ int main() {
                         break;
                     }
                     case 5: {
-                        printf(">> Search student.\n");
+                        int searchChoice;
+                        do {
+                            printf("\n===== SEARCH MENU =====\n");
+                            printf("[1] Search by Name\n");
+                            printf("[2] Search by Year of Birth\n");
+                            printf("[0] Back\n");
+                            searchChoice = getValidChoice();
+
+                            if (searchChoice == 1) {
+                                searchStudentByName(students, count);
+                            } else if (searchChoice == 2) {
+                                searchStudentByYear(students, count);
+                            }
+                        } while (searchChoice != 0);
                         break;
                     }
+
                     case 6: {
                         sortStudents(students, count);
                         break;
