@@ -658,7 +658,7 @@ void editTeacher(struct Teacher teachers[], int *count) {
                         do {
                             getValidEmail(newEmail);
                             int dup = 0;
-                            for (int j = 0; j < count; j++) {
+                            for (int j = 0; j < *count; j++) {
                                 if (j == i) continue; // bỏ qua chính nó
                                 if (strcmp(teachers[j].email, newEmail) == 0) {
                                     dup = 1;
@@ -677,7 +677,7 @@ void editTeacher(struct Teacher teachers[], int *count) {
                         do {
                             getValidPhone(newPhone);
                             int dup = 0;
-                            for (int j = 0; j < count; j++) {
+                            for (int j = 0; j < *count; j++) {
                                 if (j == i) continue;
                                 if (strcmp(teachers[j].phone, newPhone) == 0) {
                                     dup = 1;
